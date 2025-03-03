@@ -10,10 +10,15 @@ import { ConfigService } from '@nestjs/config';
       provide: 'REDIS_CLIENT',
       async useFactory(configService: ConfigService) {
         const client = createClient ({
-          url : configService.get('redis_server_url'),
+          url: configService.get('redis_server_url'),
+          socket: {
+            reconnectStrategy: (retries) => Math.min(retries * 50, 1000),
+            connectTimeout: 60000,
+            keepAlive: 5000
+          },
         });
         client.on("error", function(err) {
-          throw err;
+          console.error("Redis 连接错误:", err);
         });
         await client.connect()
         return client;
