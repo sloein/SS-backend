@@ -1,18 +1,22 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Inject, Query, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Inject, Query, UnauthorizedException, ParseIntPipe, DefaultValuePipe } from '@nestjs/common';
 import { UserService } from './user.service';
 
 import { RegisterUserDto } from './dto/register-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { UserInfo } from 'src/custom.decorator';
+import { RequirePermission, UserInfo } from 'src/custom.decorator';
 import { RequireLogin } from 'src/custom.decorator';
 import { UserDetailVo } from './vo/user-info.vo';
 import { UpdateUserPasswordDto } from './dto/update-user-password.dto';
 import { RedisService } from 'src/redis/redis.service';
 import { EmailService } from 'src/email/email.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { generateParseIntPipe } from 'src/utils';
+import { ApiTags } from '@nestjs/swagger';
+import { RefreshTokenVo } from './vo/refresh-token.vo';
 
+@ApiTags('用户管理模块')
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) { }
@@ -29,18 +33,33 @@ export class UserController {
   @Inject(EmailService)
   private emailService: EmailService;
 
+/**
+ * 教师注册
+ * @param registerUser 
+ * @returns 
+ */
   @Post('register')
   async register(@Body() registerUser: RegisterUserDto) {
     return await this.userService.register(registerUser);
   }
 
+  /**
+   * 初始化数据
+   * @returns 
+   */
   @Get("init-data")
   async initData() {
     await this.userService.initData();
     return 'done';
   }
 
+  /**
+   * 发送更改密码验证码
+   * @param address 
+   * @returns 
+   */
   @Get('update_password/captcha')
+  @RequireLogin()
   async updatePasswordCaptcha(@Query('address') address: string) {
     const code = Math.random().toString().slice(2, 8);
 
@@ -54,8 +73,13 @@ export class UserController {
     return '发送成功';
   }
 
-
+  /**
+   * 用户登录
+   * @param loginUser 
+   * @returns 
+   */
   @Post('login')
+  @RequirePermission('TC')
   async userLogin(@Body() loginUser: LoginUserDto) {
     const vo = await this.userService.login(loginUser, false);
     // 使用抽离的方法生成token
@@ -120,6 +144,9 @@ export class UserController {
     return await this.userService.update(userId, updateUserDto);
   }
 
+  /**
+   * 发送更改用户信息验证码
+   */
   @Get('update/captcha')
   async updateCaptcha(@Query('address') address: string) {
     const code = Math.random().toString().slice(2, 8);
@@ -134,7 +161,24 @@ export class UserController {
     return '发送成功';
   }
 
+  @Get('list')
+  async list(
+    @Query('pageNo', new DefaultValuePipe(1), generateParseIntPipe('pageNo')) pageNo: number,
+    @Query('pageSize', new DefaultValuePipe(2), generateParseIntPipe('pageSize')) pageSize: number,
+    @Query('username') username: string,
+    @Query('nickName') nickName: string,
+    @Query('email') email: string
+  ) {
+    return await this.userService.findUsers(username, nickName, email, pageNo, pageSize);
+  }
 
+  /**
+   * 删除用户
+   */
+  @Get('delete')
+  async delete(@Query('id') id: number) {
+    return await this.userService.delete(id);
+  }
 
   /**
    * 生成JWT access token
@@ -168,8 +212,10 @@ export class UserController {
   private generateTokens(user: any) {
     const access_token = this.generateAccessToken(user);
     const refresh_token = this.generateRefreshToken(user.id);
-
-    return { access_token, refresh_token };
+    const vo = new RefreshTokenVo();
+    vo.access_token = access_token;
+    vo.refresh_token = refresh_token;
+    return vo;
   }
 
   /**

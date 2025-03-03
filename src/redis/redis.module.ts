@@ -11,6 +11,7 @@ import { ConfigService } from '@nestjs/config';
       async useFactory(configService: ConfigService) {
         const client = createClient ({
           url: configService.get('redis_server_url'),
+          password: configService.get('redis_server_password'),
           socket: {
             reconnectStrategy: (retries) => Math.min(retries * 50, 1000),
             connectTimeout: 60000,

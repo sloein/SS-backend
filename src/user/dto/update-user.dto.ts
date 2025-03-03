@@ -1,21 +1,25 @@
-import { IsEmail, IsNotEmpty } from "class-validator";
+import { IsEmail, IsNotEmpty, IsOptional, IsArray, IsNumber } from "class-validator";
 
 export class UpdateUserDto {
+
+    id: number;
 
     headPic: string;
 
     nickName: string;
     
-    @IsNotEmpty({
-        message: '邮箱不能为空'
-    })
-    @IsEmail({}, {
-        message: '不是合法的邮箱格式'
-    })
+
     email: string;
     
-    @IsNotEmpty({
-        message: '验证码不能为空'
-    })
     captcha: string;
+
+    @IsOptional()
+    @IsArray({
+        message: '角色必须是数组'
+    })
+    @IsNumber({}, {
+        each: true,
+        message: '角色ID必须是数字'
+    })
+    roleIds?: number[];
 }

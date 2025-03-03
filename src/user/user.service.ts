@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Inject, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { md5 } from '../utils';
-import { Repository } from 'typeorm';
+import { In, Like, Repository } from 'typeorm';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { User } from './entities/user.entity';
 import { RedisService } from 'src/redis/redis.service';
@@ -11,6 +11,7 @@ import { LoginUserDto } from './dto/login-user.dto';
 import { LoginUserVo } from './vo/login-user.vo';
 import { UpdateUserPasswordDto } from './dto/update-user-password.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserListVo } from './vo/user-list.vo';
 @Injectable()
 export class UserService {
     private logger = new Logger();
@@ -29,6 +30,8 @@ export class UserService {
 
     async register(user: RegisterUserDto) {
         const captcha = await this.redisService.get(`captcha_${user.email}`);
+
+        console.log(captcha);
 
         if (!captcha) {
             throw new HttpException('验证码已失效', HttpStatus.BAD_REQUEST);
@@ -49,6 +52,13 @@ export class UserService {
         const newUser = new User();
         newUser.username = user.username;
         newUser.password = md5(user.password);
+        const teacherRole = await this.roleRepository.findOneBy({
+            id: 3
+        });
+        if (!teacherRole) {
+            throw new HttpException('老师角色不存在', HttpStatus.BAD_REQUEST);
+        }
+        newUser.roles = [teacherRole];
         newUser.email = user.email;
         newUser.nickName = user.nickName;
 
@@ -102,6 +112,58 @@ export class UserService {
 
         return vo;
     }
+
+    async delete(id: number) {
+        const user = await this.userRepository.findOneBy({ id });
+        if (!user) {
+            throw new HttpException('用户不存在', HttpStatus.BAD_REQUEST);
+        }
+        await this.userRepository.delete(id);
+        return '删除成功';
+    }
+
+    async findUsersByPage(pageNo: number, pageSize: number) {
+        const skipCount = (pageNo - 1) * pageSize;
+
+        const [users, totalCount] = await this.userRepository.findAndCount({
+            select: ['id', 'username', 'nickName', 'email', 'phoneNumber', 'isFrozen', 'headPic', 'createTime'],
+            skip: skipCount,
+            take: pageSize
+        });
+
+        return {
+            users,
+            totalCount
+        }
+    }
+    async findUsers(username: string, nickName: string, email: string, pageNo: number, pageSize: number) {
+        const skipCount = (pageNo - 1) * pageSize;
+
+        const condition: Record<string, any> = {};
+
+        if (username) {
+            condition.username = Like(`%${username}%`);
+        }
+        if (nickName) {
+            condition.nickName = Like(`%${nickName}%`);
+        }
+        if (email) {
+            condition.email = Like(`%${email}%`);
+        }
+
+        const [users, totalCount] = await this.userRepository.findAndCount({
+            select: ['id', 'username', 'nickName', 'email', 'phoneNumber', 'isFrozen', 'headPic', 'createTime'],
+            skip: skipCount,
+            take: pageSize,
+            where: condition
+        });
+        const vo = new UserListVo();
+        vo.users = users;
+        vo.totalCount = totalCount;
+        return vo;
+    }
+
+
 
 
     async initData() {
@@ -174,80 +236,94 @@ export class UserService {
     }
 
     async findUserDetailById(userId: number) {
-        const user =  await this.userRepository.findOne({
+        const user = await this.userRepository.findOne({
             where: {
                 id: userId
             }
         });
-    
+
         return user;
     }
 
     async updatePassword(userId: number, passwordDto: UpdateUserPasswordDto) {
         const captcha = await this.redisService.get(`update_password_captcha_${passwordDto.email}`);
-    
-        if(!captcha) {
+
+        if (!captcha) {
             throw new HttpException('验证码已失效', HttpStatus.BAD_REQUEST);
         }
-    
-        if(passwordDto.captcha !== captcha) {
+
+        if (passwordDto.captcha !== captcha) {
             throw new HttpException('验证码不正确', HttpStatus.BAD_REQUEST);
         }
-    
+
         const foundUser = await this.userRepository.findOneBy({
-          id: userId
+            id: userId
         });
 
-        if(!foundUser) {
+        if (!foundUser) {
             throw new HttpException('用户不存在', HttpStatus.BAD_REQUEST);
         }
-    
+
         foundUser.password = md5(passwordDto.password);
-    
+
         try {
-          await this.userRepository.save(foundUser);
-          return '密码修改成功';
-        } catch(e) {
-          this.logger.error(e, UserService);
-          return '密码修改失败';
+            await this.userRepository.save(foundUser);
+            return '密码修改成功';
+        } catch (e) {
+            this.logger.error(e, UserService);
+            return '密码修改失败';
         }
     }
-    
+
     async update(userId: number, updateUserDto: UpdateUserDto) {
         const captcha = await this.redisService.get(`update_user_captcha_${updateUserDto.email}`);
-    
-        if(!captcha) {
-            throw new HttpException('验证码已失效', HttpStatus.BAD_REQUEST);
-        }
-    
-        if(updateUserDto.captcha !== captcha) {
+
+
+        if (updateUserDto.captcha && updateUserDto.captcha !== captcha) {
             throw new HttpException('验证码不正确', HttpStatus.BAD_REQUEST);
         }
-    
-        const foundUser = await this.userRepository.findOneBy({
-          id: userId
+
+        const cfID = updateUserDto.id?updateUserDto.id:userId;
+
+        const foundUser = await this.userRepository.findOne({
+            where: { id: cfID },
+            relations: ['roles']
         });
-    
-        if(!foundUser) {
+
+        if (!foundUser) {
             throw new HttpException('用户不存在', HttpStatus.BAD_REQUEST);
         }
 
-        if(updateUserDto.nickName) {
+        if (updateUserDto.nickName) {
             foundUser.nickName = updateUserDto.nickName;
         }
-        if(updateUserDto.headPic) {
+        if (updateUserDto.headPic) {
             foundUser.headPic = updateUserDto.headPic;
         }
-    
+
+        if (updateUserDto.roleIds && updateUserDto.roleIds.length > 0) {
+            const roles = await this.roleRepository.find({
+                where: {
+                    id: In(updateUserDto.roleIds)
+                }
+            });
+            
+            if (roles.length !== updateUserDto.roleIds.length) {
+                throw new HttpException('存在无效的角色ID', HttpStatus.BAD_REQUEST);
+            }
+            
+            foundUser.roles = roles;
+        }
+
         try {
-          await this.userRepository.save(foundUser);
-          return '用户信息修改成功';
-        } catch(e) {
-          this.logger.error(e, UserService);
-          return '用户信息修改成功';
+            await this.userRepository.save(foundUser);
+            return '用户信息修改成功';
+        } catch (e) {
+            this.logger.error(e, UserService);
+            return '用户信息修改失败';
         }
     }
-    
-    
+
+
 }
 

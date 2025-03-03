@@ -13,6 +13,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { APP_GUARD } from '@nestjs/core';
 import { LoginGuard } from './login.guard';
 import { PermissionGuard } from './permission.guard';
+import { CourseModule } from './course/course.module';
 
 @Module({
   imports: [
@@ -57,7 +58,7 @@ import { PermissionGuard } from './permission.guard';
       },
       inject: [ConfigService]
     }),
-    UserModule, RedisModule, EmailModule,
+    UserModule, RedisModule, EmailModule, CourseModule,
   ],
   controllers: [AppController],
   providers: [AppService,
