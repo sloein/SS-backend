@@ -1,15 +1,25 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, HttpStatus } from '@nestjs/common';
 import { CourseService } from './course.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
+import { RequirePermission, UserInfo } from '../custom.decorator';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('课程管理')
 @Controller('course')
 export class CourseController {
   constructor(private readonly courseService: CourseService) {}
 
   @Post()
-  create(@Body() createCourseDto: CreateCourseDto) {
-    return this.courseService.create(createCourseDto);
+  @RequirePermission('TC') // 需要教师创建权限
+  async create(
+    @Body() createCourseDto: CreateCourseDto,
+    @UserInfo('id') userId: number
+  ) {
+    if (!userId) {
+      throw new HttpException('用户未登录', HttpStatus.UNAUTHORIZED);
+    }
+    return this.courseService.create(createCourseDto, userId);
   }
 
   @Get()
@@ -32,3 +42,4 @@ export class CourseController {
     return this.courseService.remove(+id);
   }
 }
+

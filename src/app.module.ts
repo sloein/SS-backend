@@ -14,6 +14,13 @@ import { APP_GUARD } from '@nestjs/core';
 import { LoginGuard } from './login.guard';
 import { PermissionGuard } from './permission.guard';
 import { CourseModule } from './course/course.module';
+import { Course } from './course/entities/course.entity';
+import { CourseChapter } from './course/entities/course-chapter.entity';
+import { ChapterContent } from './course/entities/chapter-content.entity';
+import { CourseMaterial } from './course/entities/course-material.entity';
+import { StudentCourse } from './course/entities/student-course.entity';
+import { Assignment } from './course/entities/assignment.entity';
+import { Submission } from './course/entities/submission.entity';
 
 @Module({
   imports: [
@@ -29,7 +36,6 @@ import { CourseModule } from './course/course.module';
       },
       inject: [ConfigService]
     }),
-
     UserModule,
     ConfigModule.forRoot({
       isGlobal: true,
@@ -47,7 +53,9 @@ import { CourseModule } from './course/course.module';
           synchronize: true,
           logging: true,
           entities: [
-            User, Role, Permission
+            User, Role, Permission, 
+            Course, CourseChapter, ChapterContent, CourseMaterial,
+            StudentCourse, Assignment, Submission
           ],
           poolSize: 10,
           connectorPackage: 'mysql2',

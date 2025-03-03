@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Inject, Query, UnauthorizedException, ParseIntPipe, DefaultValuePipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Inject, Query, UnauthorizedException, ParseIntPipe, DefaultValuePipe, UploadedFile, UseInterceptors, BadRequestException } from '@nestjs/common';
 import { UserService } from './user.service';
 
 import { RegisterUserDto } from './dto/register-user.dto';
@@ -15,6 +15,9 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { generateParseIntPipe } from 'src/utils';
 import { ApiTags } from '@nestjs/swagger';
 import { RefreshTokenVo } from './vo/refresh-token.vo';
+import { FileInterceptor } from '@nestjs/platform-express';
+import * as path from 'path';
+import { storage } from 'src/my-file-storage';
 
 @ApiTags('用户管理模块')
 @Controller('user')
@@ -33,11 +36,11 @@ export class UserController {
   @Inject(EmailService)
   private emailService: EmailService;
 
-/**
- * 教师注册
- * @param registerUser 
- * @returns 
- */
+  /**
+   * 教师注册
+   * @param registerUser 
+   * @returns 
+   */
   @Post('register')
   async register(@Body() registerUser: RegisterUserDto) {
     return await this.userService.register(registerUser);
@@ -179,6 +182,34 @@ export class UserController {
   async delete(@Query('id') id: number) {
     return await this.userService.delete(id);
   }
+
+  /**
+   * 上传头像
+   * @param file 
+   * @returns 
+   */
+  @Post('upload')
+  @UseInterceptors(FileInterceptor('file', {
+    dest: 'uploads',
+    storage: storage,
+    limits: {
+      fileSize: 1024 * 1024 * 3
+    },
+    fileFilter(req, file, callback) {
+      const extname = path.extname(file.originalname);
+      if (['.png', '.jpg', '.gif'].includes(extname)) {
+        callback(null, true);
+      } else {
+        callback(new BadRequestException('只能上传图片'), false);
+      }
+    }
+  }))
+  uploadFile(@UploadedFile() file: Express.Multer.File) {
+    console.log('file', file);
+    return file.path;
+  }
+
+
 
   /**
    * 生成JWT access token
