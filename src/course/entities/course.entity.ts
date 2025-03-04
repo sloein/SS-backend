@@ -1,9 +1,8 @@
-import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { User } from '../../user/entities/user.entity';
 import { CourseMaterial } from './course-material.entity';
 import { CourseChapter } from './course-chapter.entity';
 import { Assignment } from './assignment.entity';
-import { StudentCourse } from './student-course.entity';
 
 
 export enum CourseStatus {
@@ -26,9 +25,6 @@ export class Course {
   @Column({ name: 'cover_image' })
   coverImage: string;
 
-  @Column({ name: 'teacher_id' })
-  teacherId: number;
-
   @Column({
     type: 'enum',
     enum: CourseStatus
@@ -47,9 +43,11 @@ export class Course {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
-  // 关联关系
-  @ManyToOne(() => User)
-  teacher: User;
+  @ManyToMany(() => User)
+  @JoinTable({
+      name: 'course_teachers'
+  })
+  teachers: User[] 
 
   @OneToMany(() => CourseChapter, chapter => chapter.course)
   chapters: CourseChapter[];
@@ -60,6 +58,9 @@ export class Course {
   @OneToMany(() => Assignment, assignment => assignment.course)
   assignments: Assignment[];
 
-  @OneToMany(() => StudentCourse, studentCourse => studentCourse.course)
-  studentCourses: StudentCourse[];
+  @ManyToMany(() => User)
+  @JoinTable({
+      name: 'course_students'
+  })
+  students: User[];
 }

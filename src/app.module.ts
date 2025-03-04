@@ -18,7 +18,6 @@ import { Course } from './course/entities/course.entity';
 import { CourseChapter } from './course/entities/course-chapter.entity';
 import { ChapterContent } from './course/entities/chapter-content.entity';
 import { CourseMaterial } from './course/entities/course-material.entity';
-import { StudentCourse } from './course/entities/student-course.entity';
 import { Assignment } from './course/entities/assignment.entity';
 import { Submission } from './course/entities/submission.entity';
 
@@ -55,7 +54,7 @@ import { Submission } from './course/entities/submission.entity';
           entities: [
             User, Role, Permission, 
             Course, CourseChapter, ChapterContent, CourseMaterial,
-            StudentCourse, Assignment, Submission
+             Assignment, Submission
           ],
           poolSize: 10,
           connectorPackage: 'mysql2',
