@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, HttpS
 import { CourseService } from './course.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
-import { RequirePermission, UserInfo } from '../custom.decorator';
+import { RequireLogin, RequirePermission, UserInfo } from '../custom.decorator';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { LoginGuard } from '../login.guard';
 import { PermissionGuard } from '../permission.guard';
@@ -64,6 +64,7 @@ export class CourseController {
 
   @Get('delete')
   @RequirePermission('TC','AD') // 需要教师创建权限
+  @RequireLogin()
   @ApiOperation({ summary: '删除课程' })
   @ApiResponse({ status: 200, description: '删除成功' })
   @ApiResponse({ status: 401, description: '未授权' })

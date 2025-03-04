@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Inject, Query, UnauthorizedException, ParseIntPipe, DefaultValuePipe, UploadedFile, UseInterceptors, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Inject, Query, UnauthorizedException, ParseIntPipe, DefaultValuePipe, UploadedFile, UseInterceptors, BadRequestException, HttpException, HttpStatus } from '@nestjs/common';
 import { UserService } from './user.service';
 
 import { RegisterUserDto } from './dto/register-user.dto';
@@ -100,6 +100,10 @@ export class UserController {
   @Post('admin/login')
   async adminLogin(@Body() loginUser: LoginUserDto) {
     const vo = await this.userService.login(loginUser, true);
+    
+    if(!vo.userInfo.isAdmin) {
+      throw new HttpException('不是管理员', HttpStatus.BAD_REQUEST);
+    }
 
     // 使用抽离的方法生成token
     const tokens = this.generateTokens(vo);

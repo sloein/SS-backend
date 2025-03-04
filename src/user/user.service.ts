@@ -136,7 +136,6 @@ export class UserService {
             totalCount
         }
     }
-    
     async findUsers(username: string, nickName: string, email: string, pageNo: number, pageSize: number) {
         const skipCount = (pageNo - 1) * pageSize;
 

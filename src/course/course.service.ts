@@ -18,23 +18,27 @@ export class CourseService {
   ) {}
 
   async delete(id: number, userId: number) {
-    const course = await this.courseRepository.findOneBy({ id });
+    const course = await this.courseRepository.findOne({
+      where: { id },
+      relations: ['teachers']
+    });
 
     if (!course) {
       throw new NotFoundException(`课程 #${id} 不存在`);
     } 
+
     //判断是否是管理员
     const foundUser = await this.userRepository.findOne({
       where: { id: userId }
     });
+
     const isMaster = course.teachers.some(teacher => teacher.id === userId);
     if (!foundUser?.isAdmin && !isMaster) {
       throw new UnauthorizedException('您没有权限删除课程');
     }
-    await this.courseRepository.delete(id);
 
-    return '删除课程成功'
-    
+    await this.courseRepository.delete(id);
+    return '删除课程成功';
   }
 
   async create(createCourseDto: CreateCourseDto) {
@@ -174,11 +178,14 @@ export class CourseService {
 
   async update(id: number, updateCourseDto: UpdateCourseDto, userId: number) {
     const course = await this.courseRepository.findOne({
-      where: { id }
+      where: { id },
+      relations: ['teachers']
     });
+
     if (!course) {
       throw new NotFoundException(`课程 #${id} 不存在`);
     }
+
     //判断该课程老师中是否包含
     const isTeacher = course.teachers.some(teacher => teacher.id === userId);
     
@@ -186,10 +193,10 @@ export class CourseService {
     const isAdmin = await this.userRepository.findOne({
       where: { id: userId, roles: { name: 'admin' } }
     });
+
     if (!isAdmin && !isTeacher) {
       throw new UnauthorizedException('您没有权限更新课程');
     }
-    
 
     // 更新课程信息
     const { startTime, endTime, ...rest } = updateCourseDto;
@@ -210,7 +217,6 @@ export class CourseService {
 
     // 保存更新
     const updatedCourse = await this.courseRepository.save(course);
-
     return updatedCourse;
   }
 
