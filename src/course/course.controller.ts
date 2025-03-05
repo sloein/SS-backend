@@ -47,21 +47,21 @@ export class CourseController {
     return this.courseService.findOne(id);
   }
 
-  @Patch(':id')
+  @Post('update')
   @RequirePermission('TC','AD') // 需要教师创建权限
   @ApiOperation({ summary: '更新课程信息' })
   @ApiResponse({ status: 200, description: '更新成功' })
   @ApiResponse({ status: 401, description: '未授权' })
   @ApiResponse({ status: 404, description: '课程不存在' })
   async update(
-    @Param('id') id: string,
     @Body() updateCourseDto: UpdateCourseDto,
     @UserInfo('id') userId: number
   ) {
     // TODO: 验证课程是否属于当前教师
-    return this.courseService.update(+id, updateCourseDto, userId);
+    return this.courseService.update( updateCourseDto, userId);
   }
 
+  
   @Get('delete')
   @RequirePermission('TC','AD') // 需要教师创建权限
   @RequireLogin()

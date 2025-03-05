@@ -152,8 +152,8 @@ export class CourseService {
       .leftJoinAndSelect('course.teachers', 'teachers')
       .leftJoinAndSelect('course.chapters', 'chapters')
       .leftJoinAndSelect('course.materials', 'materials')
+      .leftJoinAndSelect('course.assignments', 'assignments')
       .leftJoinAndSelect('chapters.contents', 'contents')
-      .leftJoinAndSelect('chapters.assignments', 'assignments')
       .select([
         'course',
         'teachers.id',
@@ -162,11 +162,15 @@ export class CourseService {
         'chapters',
         'contents',
         'materials',
-        'assignments'
+        'assignments.id',
+        'assignments.title',
+        'assignments.description',
+        'assignments.deadline'
       ])
       .where('course.id = :id', { id })
       .orderBy('chapters.order', 'ASC')
       .addOrderBy('materials.createdAt', 'DESC')
+      .addOrderBy('assignments.deadline', 'ASC')
       .getOne();
 
     if (!course) {
@@ -176,21 +180,21 @@ export class CourseService {
     return course;
   }
 
-  async update(id: number, updateCourseDto: UpdateCourseDto, userId: number) {
+  async update(updateCourseDto: UpdateCourseDto, userId: number) {
     const course = await this.courseRepository.findOne({
-      where: { id },
+      where: { id: updateCourseDto.id },
       relations: ['teachers']
     });
 
     if (!course) {
-      throw new NotFoundException(`课程 #${id} 不存在`);
+      throw new NotFoundException(`课程 #${updateCourseDto.title} 不存在`);
     }
 
     //判断该课程老师中是否包含
     const isTeacher = course.teachers.some(teacher => teacher.id === userId);
     
     //判断是否是管理员
-    const isAdmin = await this.userRepository.findOne({
+    const isAdmin = this.userRepository.findOne({
       where: { id: userId, roles: { name: 'admin' } }
     });
 

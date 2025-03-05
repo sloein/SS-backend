@@ -12,14 +12,14 @@ export class PermissionGuard implements CanActivate {
     context: ExecutionContext,
   ): Promise<boolean> {
     const request: Request = context.switchToHttp().getRequest();
-   
-    if(!request.user) {
+
+    if (!request.user) {
       return true;
     }
- 
+
     const permissions = request.user.permissions;
-  
-   
+
+
     // 确保权限是数组
     if (!Array.isArray(permissions)) {
       throw new UnauthorizedException('用户权限数据格式错误');
@@ -29,22 +29,22 @@ export class PermissionGuard implements CanActivate {
       context.getClass(),
       context.getHandler()
     ])
-    console.log("requiredPermissions",requiredPermissions);
-    console.log("permissions",permissions);
+    console.log("requiredPermissions", requiredPermissions);
+    console.log("permissions", permissions);
 
 
-    if(!requiredPermissions) {
+    if (!requiredPermissions) {
       return true;
     }
-   for(let i = 0; i < requiredPermissions.length; i++) {
+    for (let i = 0; i < requiredPermissions.length; i++) {
       const curPermission = requiredPermissions[i];
-     const found = permissions.find(item => item.code === curPermission);
-      
-      if(!found) {
-        throw new UnauthorizedException('您没有访问该接口的权限');
+      const found = permissions.find(item => item.code === curPermission);
+
+      if (found) {
+        return true;
       }
     }
 
-    return true;
+    return false;
   }
 }
