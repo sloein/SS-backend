@@ -3,18 +3,16 @@ import { CourseService } from './course.service';
 import { CourseController } from './course.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Course } from './entities/course.entity';
-import { CourseChapter } from './entities/course-chapter.entity';
+import { Chapter } from '../chapter/entities/chapter.entity';
 import { CourseMaterial } from './entities/course-material.entity';
-import { ChapterContent } from './entities/chapter-content.entity';
-import { Assignment } from './entities/assignment.entity';
-import { Submission } from './entities/submission.entity';
+import { Assignment } from '../assignment/entities/assignment.entity';
+import { Submission } from '../assignment/entities/submission.entity';
 import { User } from 'src/user/entities/user.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([
     Course, 
-    CourseChapter, 
-    ChapterContent, 
+    Chapter,  
     CourseMaterial,
     Assignment,
     Submission,

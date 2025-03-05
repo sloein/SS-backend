@@ -87,7 +87,7 @@ export class UserController {
     const vo = await this.userService.login(loginUser, false);
     // 使用抽离的方法生成token
     const tokens = this.generateTokens(vo);
-    vo.accessToken = tokens.access_token;
+    vo.token = tokens.token;
     vo.refreshToken = tokens.refresh_token;
     return vo;
   }
@@ -107,7 +107,7 @@ export class UserController {
 
     // 使用抽离的方法生成token
     const tokens = this.generateTokens(vo);
-    vo.accessToken = tokens.access_token;
+    vo.token = tokens.token;
     vo.refreshToken = tokens.refresh_token;
     return vo;
   }
@@ -248,7 +248,7 @@ export class UserController {
     const access_token = this.generateAccessToken(user);
     const refresh_token = this.generateRefreshToken(user.id);
     const vo = new RefreshTokenVo();
-    vo.access_token = access_token;
+    vo.token = access_token;
     vo.refresh_token = refresh_token;
     return vo;
   }

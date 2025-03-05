@@ -1,26 +1,23 @@
 import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
-import { Course } from './course.entity';
-import { ChapterContent } from './chapter-content.entity';
+import { Course } from '../../course/entities/course.entity';
+import { Content } from './content.entity';
 
-@Entity('course_chapters')
-export class CourseChapter {
+@Entity('chapters')
+export class Chapter {
   @PrimaryGeneratedColumn()
   id: number;
-
-  @Column({ name: 'course_id' })
-  courseId: number;
 
   @Column()
   title: string;
 
-  @Column('text')
+  @Column('text', { nullable: true })
   description: string;
 
   @Column()
   order: number;
 
-  @Column()
-  duration: number;
+  @Column({ name: 'course_id' })
+  courseId: number;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
@@ -28,10 +25,9 @@ export class CourseChapter {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
-  // 关联关系
   @ManyToOne(() => Course, course => course.chapters)
   course: Course;
 
-  @OneToMany(() => ChapterContent, content => content.chapter)
-  contents: ChapterContent[];
-} 
+  @OneToMany(() => Content, content => content.chapter)
+  contents: Content[];
+}

@@ -12,9 +12,6 @@ export class CourseMaterial {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ name: 'course_id' })
-  courseId: number;
-
   @Column()
   title: string;
 

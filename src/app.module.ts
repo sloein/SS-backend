@@ -15,11 +15,14 @@ import { LoginGuard } from './login.guard';
 import { PermissionGuard } from './permission.guard';
 import { CourseModule } from './course/course.module';
 import { Course } from './course/entities/course.entity';
-import { CourseChapter } from './course/entities/course-chapter.entity';
-import { ChapterContent } from './course/entities/chapter-content.entity';
 import { CourseMaterial } from './course/entities/course-material.entity';
-import { Assignment } from './course/entities/assignment.entity';
-import { Submission } from './course/entities/submission.entity';
+import { Assignment } from './assignment/entities/assignment.entity';
+import { Submission } from './assignment/entities/submission.entity';
+import { ChapterModule } from './chapter/chapter.module';
+import { AssignmentModule } from './assignment/assignment.module';
+import { Chapter } from './chapter/entities/chapter.entity';
+import { Content } from './chapter/entities/content.entity';
+
 
 @Module({
   imports: [
@@ -53,8 +56,8 @@ import { Submission } from './course/entities/submission.entity';
           logging: true,
           entities: [
             User, Role, Permission, 
-            Course, CourseChapter, ChapterContent, CourseMaterial,
-             Assignment, Submission
+            Course,Chapter, Content, CourseMaterial,
+            Assignment, Submission
           ],
           poolSize: 10,
           connectorPackage: 'mysql2',
@@ -65,7 +68,7 @@ import { Submission } from './course/entities/submission.entity';
       },
       inject: [ConfigService]
     }),
-    UserModule, RedisModule, EmailModule, CourseModule,
+    UserModule, RedisModule, EmailModule, CourseModule, ChapterModule, AssignmentModule,
   ],
   controllers: [AppController],
   providers: [AppService,

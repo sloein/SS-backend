@@ -27,7 +27,7 @@ export class LoginUserVo {
 
     userInfo: UserInfo;
 
-    accessToken: string;
+    token: string;
 
     refreshToken: string;
 }

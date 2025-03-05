@@ -1,5 +1,5 @@
 import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
-import { Course } from './course.entity';
+import { Course } from '../../course/entities/course.entity';
 import { Submission } from './submission.entity';
 
 
@@ -7,9 +7,6 @@ import { Submission } from './submission.entity';
 export class Assignment {
   @PrimaryGeneratedColumn()
   id: number;
-
-  @Column({ name: 'course_id' })
-  courseId: number;
 
   @Column()
   title: string;

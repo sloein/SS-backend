@@ -12,11 +12,6 @@ export class Submission {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ name: 'assignment_id' })
-  assignmentId: number;
-
-  @Column({ name: 'student_id' })
-  studentId: number;
 
   @Column('text')
   content: string;

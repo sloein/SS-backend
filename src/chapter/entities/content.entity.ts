@@ -1,5 +1,5 @@
 import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
-import { CourseChapter } from './course-chapter.entity';
+import { Chapter } from './chapter.entity';
 
 export enum ContentType {
   VIDEO = 'video',   // 视频
@@ -7,13 +7,11 @@ export enum ContentType {
   QUIZ = 'quiz'      // 测验
 }
 
-@Entity('chapter_contents')
-export class ChapterContent {
+@Entity('contents')
+export class Content {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ name: 'chapter_id' })
-  chapterId: number;
 
   @Column()
   title: string;
@@ -39,7 +37,6 @@ export class ChapterContent {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
-  // 关联关系
-  @ManyToOne(() => CourseChapter, chapter => chapter.contents)
-  chapter: CourseChapter;
+  @ManyToOne(() => Chapter, chapter => chapter.contents)
+  chapter: Chapter;
 } 
