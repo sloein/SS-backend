@@ -47,16 +47,6 @@ export class UserController {
   }
 
   /**
-   * 初始化数据
-   * @returns 
-   */
-  @Get("init-data")
-  async initData() {
-    await this.userService.initData();
-    return 'done';
-  }
-
-  /**
    * 发送更改密码验证码
    * @param address 
    * @returns 
@@ -116,6 +106,13 @@ export class UserController {
   async adminRefresh(@Query('refreshToken') refreshToken: string) {
     return this.handleTokenRefresh(refreshToken, true);
   }
+
+  @Get('listRouters')
+  @RequireLogin()
+  async listRouters() {
+    return await this.userService.listRouters();
+  }
+
 
   @Get('info')
   @RequireLogin()

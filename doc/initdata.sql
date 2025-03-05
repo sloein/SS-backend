@@ -36,6 +36,17 @@ INSERT INTO user_roles (usersId, rolesId) VALUES
 (4, 3), -- student1 -> student role
 (5, 3); -- student2 -> student role
 
+-- 插入路由数据
+INSERT INTO routers (menuId, menuName, parentId, menuType, path, name, component, icon, isHide, isLink, isKeepAlive, isFull, isAffix, redirect) VALUES
+-- 课程管理
+(100, '课程管理', 0, '1', '/course', 'coursePage', '', 'Reading', '1', '', '0', '1', '1', '/course/list'),
+(101, '课程列表', 100, '2', '/course/list', 'courseListPage', 'course/list/index', 'List', '1', '', '0', '1', '1', ''),
+(102, '创建课程', 100, '2', '/course/create', 'courseCreatePage', 'course/create/index', 'Plus', '1', '', '0', '1', '1', ''),
+(103, '课程详情', 100, '2', '/course/detail/:id', 'courseDetailPage', 'course/detail/index', 'InfoFilled', '1', '', '0', '1', '1', ''),
+(110, '章节管理', 100, '2', '/course/chapter/:courseId', 'chapterPage', 'course/chapter/index', 'Files', '1', '', '0', '1', '1', ''),
+(120, '作业管理', 100, '2', '/course/assignment/:courseId', 'assignmentPage', 'course/assignment/index', 'EditPen', '1', '', '0', '1', '1', ''),
+(130, '学生管理', 100, '2', '/course/students/:courseId', 'studentsPage', 'course/students/index', 'User', '1', '', '0', '1', '1', '');
+
 -- 插入课程数据
 INSERT INTO courses (title, description, cover_image, status, start_time, end_time) VALUES
 ('Web开发基础', '学习HTML、CSS和JavaScript的基础知识', '/uploads/web-basic.jpg', 'in_progress', '2024-03-01', '2024-06-30'),

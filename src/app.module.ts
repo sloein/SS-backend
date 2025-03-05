@@ -6,6 +6,7 @@ import { UserModule } from './user/user.module';
 import { User } from './user/entities/user.entity';
 import { Permission } from './user/entities/permission.entity';
 import { Role } from './user/entities/role.entity';
+import { Router } from './user/entities/router.entity';
 import { RedisModule } from './redis/redis.module';
 import { EmailModule } from './email/email.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -55,8 +56,8 @@ import { Content } from './chapter/entities/content.entity';
           synchronize: true,
           logging: true,
           entities: [
-            User, Role, Permission, 
-            Course,Chapter, Content, CourseMaterial,
+            User, Role, Permission, Router,
+            Course, Chapter, Content, CourseMaterial,
             Assignment, Submission
           ],
           poolSize: 10,
