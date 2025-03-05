@@ -15,7 +15,7 @@ export class CourseService {
     private courseRepository: Repository<Course>,
     @InjectRepository(User)
     private userRepository: Repository<User>
-  ) {}
+  ) { }
 
   async delete(id: number, userId: number) {
     const course = await this.courseRepository.findOne({
@@ -25,7 +25,7 @@ export class CourseService {
 
     if (!course) {
       throw new NotFoundException(`课程 #${id} 不存在`);
-    } 
+    }
 
     //判断是否是管理员
     const foundUser = await this.userRepository.findOne({
@@ -192,7 +192,7 @@ export class CourseService {
 
     //判断该课程老师中是否包含
     const isTeacher = course.teachers.some(teacher => teacher.id === userId);
-    
+
     //判断是否是管理员
     const isAdmin = this.userRepository.findOne({
       where: { id: userId, roles: { name: 'admin' } }
@@ -223,6 +223,80 @@ export class CourseService {
     const updatedCourse = await this.courseRepository.save(course);
     return updatedCourse;
   }
+
+  async getMyCourses(user: User) {
+    //判断是教师还是学生
+    const isTeacher = user.roles.some(role => role.name === 'teacher');
+    const isStudent = user.roles.some(role => role.name === 'student');
+
+    if (isTeacher) {
+      const courses = await this.courseRepository.find({
+        where: { teachers: { id: user.id } }
+      });
+      return courses;
+    } else if (isStudent) {
+      const courses = await this.courseRepository.find({
+        where: { students: { id: user.id } }
+      });
+      return courses;
+    }
+  }
+
+  async selectCourse(courseId: number, userId: number) {
+    // 1. 查找课程
+    const course = await this.courseRepository.findOne({
+      where: { id: courseId },
+      relations: ['students']
+    });
+
+    if (!course) {
+      throw new NotFoundException(`课程 #${courseId} 不存在`);
+    }
+
+    // 2. 查找用户
+    const user = await this.userRepository.findOne({
+      where: { id: userId }
+    });
+
+    if (!user) {
+      throw new NotFoundException(`用户 #${userId} 不存在`);
+    }
+
+    // 3. 检查是否已经选过这门课
+    if (course.students && course.students.some(student => student.id === userId)) {
+      throw new BadRequestException('您已经选过这门课程了');
+    }
+
+    // 4. 初始化 students 数组（如果为空）
+    if (!course.students) {
+      course.students = [];
+    }
+
+    // 5. 添加学生到课程
+    course.students.push(user);
+
+    // 6. 保存更新
+    await this.courseRepository.save(course);
+
+    return '选课成功';
+  }
+
+  async cancelCourse(userId: number, courseId: number) {
+    const course = await this.courseRepository.findOne({
+      where: { id: courseId },
+      relations: ['students']
+    });
+
+    if (!course) {
+      throw new NotFoundException(`课程 #${courseId} 不存在`);
+    }
+
+    course.students = course.students.filter(student => student.id !== userId);
+
+    await this.courseRepository.save(course);
+    return '取消选课成功';
+  }
+
 
 
 }

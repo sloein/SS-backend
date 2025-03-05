@@ -7,6 +7,7 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { LoginGuard } from '../login.guard';
 import { PermissionGuard } from '../permission.guard';
 import { generateParseIntPipe } from 'src/utils';
+import { User } from 'src/user/entities/user.entity';
 
 @ApiTags('课程管理')
 @Controller('course')
@@ -76,5 +77,45 @@ export class CourseController {
     // TODO: 验证课程是否属于当前教师
     return this.courseService.delete(+id, userId);
   }
+
+  /**
+   * 获取我的课程(我教的或我学的)
+   */
+  @Get('my')
+  @RequireLogin()
+  @ApiOperation({ summary: '获取我的课程' })
+  @ApiResponse({ status: 200, description: '获取成功' })
+  @ApiResponse({ status: 401, description: '未授权' })
+  getMyCourses(@UserInfo() user: User) {
+    return this.courseService.getMyCourses(user);
+  }
+
+  /**
+   * 选修课程(学生)
+   */
+  @Post('select')
+  @RequireLogin()
+  @RequirePermission('ST')
+  @ApiOperation({ summary: '选修课程' })
+  @ApiResponse({ status: 200, description: '选修成功' })
+  @ApiResponse({ status: 401, description: '未授权' })
+  selectCourse(@UserInfo('id') userId: number, @Body('courseId') courseId: number) {  
+    return this.courseService.selectCourse(userId, courseId);
+  }
+
+  /**
+   * 取消选课
+   */
+  @Post('cancel')
+  @RequireLogin()
+  @RequirePermission('ST')
+  @ApiOperation({ summary: '退课' })
+  @ApiResponse({ status: 200, description: '退课成功' })
+  @ApiResponse({ status: 401, description: '未授权' })
+  cancelCourse(@UserInfo('id') userId: number, @Body('courseId') courseId: number) {
+    return this.courseService.cancelCourse(userId, courseId);
+  }
+
+
 }
 

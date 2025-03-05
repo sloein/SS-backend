@@ -64,7 +64,6 @@
 | DELETE | /api/courses/:id/enroll | 学生退选课程 | 学生 |
 | GET | /api/courses/my | 获取我创建的课程 | 教师 |
 | GET | /api/courses/enrolled | 获取我选修的课程 | 学生 |
-| PUT | /api/courses/:id/review | 审核课程 | 管理员 |
 
 ## 5. 章节与内容模块 (Chapter/Content)
 
