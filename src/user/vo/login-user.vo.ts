@@ -9,7 +9,7 @@ interface UserInfo {
 
     email: string;
 
-    headPic: string;
+    avatar: string;
 
     phoneNumber: string;
 
@@ -17,7 +17,7 @@ interface UserInfo {
 
     isAdmin: boolean;
 
-    createTime: number;
+    createTime: string;
 
     roles: string[];
 

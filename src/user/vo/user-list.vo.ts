@@ -9,21 +9,21 @@ class User {
 
     @ApiProperty()
     nickName: string;
-    
+
     @ApiProperty()
-    email: string; 
+    email: string;
 
     @ApiProperty()
     phoneNumber: string;
 
     @ApiProperty()
     isFrozen: boolean;
-    
-    @ApiProperty()
-    headPic: string;
 
     @ApiProperty()
-    createTime: Date;
+    avatar: string;
+
+    @ApiProperty()
+    createTime: string;
 }
 
 export class UserListVo {

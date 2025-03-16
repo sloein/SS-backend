@@ -109,8 +109,8 @@ export class UserController {
 
   @Get('listRouters')
   @RequireLogin()
-  async listRouters() {
-    return await this.userService.listRouters();
+  async listRouters(@UserInfo('userId') userId: number) {
+    return await this.userService.listRouters(userId);
   }
 
 
@@ -127,7 +127,7 @@ export class UserController {
     vo.id = user.id;
     vo.email = user.email;
     vo.username = user.username;
-    vo.headPic = user.headPic;
+    vo.avatar = user.avatar;
     vo.phoneNumber = user.phoneNumber;
     vo.nickName = user.nickName;
     vo.createTime = user.createTime;
@@ -207,6 +207,7 @@ export class UserController {
   }))
   uploadFile(@UploadedFile() file: Express.Multer.File) {
     console.log('file', file);
+    
     return file.path;
   }
 

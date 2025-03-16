@@ -4,7 +4,7 @@ export class UpdateUserDto {
 
     id: number;
 
-    headPic: string;
+    avatar: string;
 
     nickName: string;
     

@@ -138,6 +138,7 @@ export class CourseService {
 
     const [courses, totalCount] = await queryBuilder.getManyAndCount();
 
+    console.log(courses);
 
     const vo = new CourseListVo();
     vo.courses = courses;

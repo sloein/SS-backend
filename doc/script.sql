@@ -114,7 +114,7 @@ create table users
     password      varchar(50)                              not null comment '密码',
     nick_name     varchar(50)                              not null comment '昵称',
     email         varchar(50)                              not null comment '邮箱',
-    headPic       varchar(100)                             null comment '头像',
+    avatar       varchar(100)                             null comment '头像',
     phoneNumber   varchar(20)                              null comment '手机号',
     isFrozen      tinyint     default 0                    not null comment '是否冻结',
     real_name     varchar(50)                              null comment '真实姓名',

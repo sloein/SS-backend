@@ -64,7 +64,7 @@
    - email: 邮箱
    - phone: 手机号
    - real_name: 真实姓名
-   - headPic: 头像URL
+   - avatar: 头像URL
    - wechat_openid: 微信OpenID(小程序登录用)
    - status: 状态(启用/禁用)
    - created_time: 创建时间

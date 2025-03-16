@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, ManyToMany } from 'typeorm';
+import { User } from './user.entity';  // 请确保路径正确
 
 @Entity('routers')
 export class Router {
@@ -7,6 +8,9 @@ export class Router {
 
   @Column()
   menuName: string;
+
+  @ManyToMany(() => User, user => user.routers)
+  users: User[];
 
   @Column({ default: 0 })
   parentId: number;

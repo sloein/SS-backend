@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Inject, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { md5 } from '../utils';
-import { In, Like, Repository } from 'typeorm';
+import { formatDate, md5 } from '../utils';
+import { Between, In, Like, Repository } from 'typeorm';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { User } from './entities/user.entity';
 import { RedisService } from 'src/redis/redis.service';
@@ -12,6 +12,7 @@ import { LoginUserVo } from './vo/login-user.vo';
 import { UpdateUserPasswordDto } from './dto/update-user-password.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserListVo } from './vo/user-list.vo';
+import { Router } from './entities/router.entity';
 @Injectable()
 export class UserService {
     private logger = new Logger();
@@ -24,6 +25,9 @@ export class UserService {
 
     @InjectRepository(Permission)
     private permissionRepository: Repository<Permission>;
+
+    @InjectRepository(Router)
+    private routerRepository: Repository<Router>;
 
     @Inject(RedisService)
     private redisService: RedisService;
@@ -61,6 +65,13 @@ export class UserService {
         newUser.roles = [teacherRole];
         newUser.email = user.email;
         newUser.nickName = user.nickName;
+        //路由里menuId为100到199的添加进去
+        const routers = await this.routerRepository.find({
+            where: {
+                menuId: Between(100, 199)
+            }
+        });
+        newUser.routers = routers;
 
         try {
             await this.userRepository.save(newUser);
@@ -81,11 +92,11 @@ export class UserService {
         });
 
         if (!user) {
-            throw new HttpException('用户不存在', HttpStatus.BAD_REQUEST);
+            throw new HttpException('用户不存在', HttpStatus.UNAUTHORIZED);
         }
 
         if (user.password !== md5(loginUserDto.password)) {
-            throw new HttpException('密码错误', HttpStatus.BAD_REQUEST);
+            throw new HttpException('密码错误', HttpStatus.UNAUTHORIZED);
         }
 
         const vo = new LoginUserVo();
@@ -95,8 +106,8 @@ export class UserService {
             nickName: user.nickName,
             email: user.email,
             phoneNumber: user.phoneNumber,
-            headPic: user.headPic,
-            createTime: user.createTime.getTime(),
+            avatar: user.avatar,
+            createTime: formatDate(user.createTime),
             isFrozen: user.isFrozen,
             isAdmin: user.isAdmin,
             roles: user.roles.map(item => item.name),
@@ -126,7 +137,7 @@ export class UserService {
         const skipCount = (pageNo - 1) * pageSize;
 
         const [users, totalCount] = await this.userRepository.findAndCount({
-            select: ['id', 'username', 'nickName', 'email', 'phoneNumber', 'isFrozen', 'headPic', 'createTime'],
+            select: ['id', 'username', 'nickName', 'email', 'phoneNumber', 'isFrozen', 'avatar', 'createTime'],
             skip: skipCount,
             take: pageSize
         });
@@ -153,19 +164,31 @@ export class UserService {
         }
 
         const [users, totalCount] = await this.userRepository.findAndCount({
-            select: ['id', 'username', 'nickName', 'email', 'phoneNumber', 'isFrozen', 'headPic', 'createTime'],
+            select: ['id', 'username', 'nickName', 'email', 'phoneNumber', 'isFrozen', 'avatar', 'createTime'],
             skip: skipCount,
             take: pageSize,
             where: condition
         });
         const vo = new UserListVo();
-        vo.users = users;
+        vo.users = users.map(user => ({
+            ...user,
+            createTime: formatDate(user.createTime)
+        }));    
         vo.totalCount = totalCount;
         return vo;
     }
 
-    async listRouters() {
-       
+    async listRouters(userId: number) {
+        const user = await this.userRepository.findOne({
+            where: {
+                id: userId
+            },
+            relations: ['routers']
+        });
+        if (!user) {
+            throw new HttpException('用户不存在', HttpStatus.BAD_REQUEST);
+        }
+        return user.routers;
     }
 
     async findUserById(userId: number, isAdmin: boolean) {
@@ -259,8 +282,8 @@ export class UserService {
         if (updateUserDto.nickName) {
             foundUser.nickName = updateUserDto.nickName;
         }
-        if (updateUserDto.headPic) {
-            foundUser.headPic = updateUserDto.headPic;
+        if (updateUserDto.avatar) {
+            foundUser.avatar = updateUserDto.avatar;
         }
 
         if (updateUserDto.roleIds && updateUserDto.roleIds.length > 0) {

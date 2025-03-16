@@ -1,5 +1,6 @@
 import { Column, CreateDateColumn, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Role } from "./role.entity";
+import { Router } from "./router.entity";
 
 @Entity({
     name: 'users'
@@ -41,7 +42,7 @@ export class User {
         length: 100,
         nullable: true
     })
-    headPic: string;
+    avatar: string;
 
     @Column({
         comment: '手机号',
@@ -89,5 +90,9 @@ export class User {
         name: 'user_roles'
     })
     roles: Role[] 
+
+    @ManyToMany(() => Router, router => router.users)
+    @JoinTable()
+    routers: Router[];
 }
 

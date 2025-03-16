@@ -15,6 +15,10 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
   app.useGlobalInterceptors(new FormatResponseInterceptor());
   app.useGlobalInterceptors(new InvokeRecordInterceptor());
+  app.useGlobalPipes(new ValidationPipe({ 
+    transform: true,
+    transformOptions: { enableImplicitConversion: true }
+  }));
   app.useGlobalFilters(new CustomExceptionFilter());
 
   app.useStaticAssets('uploads', {

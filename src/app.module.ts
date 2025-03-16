@@ -23,7 +23,7 @@ import { ChapterModule } from './chapter/chapter.module';
 import { AssignmentModule } from './assignment/assignment.module';
 import { Chapter } from './chapter/entities/chapter.entity';
 import { Content } from './chapter/entities/content.entity';
-
+import { MinioModule } from './minio/minio.module';
 
 @Module({
   imports: [
@@ -33,21 +33,21 @@ import { Content } from './chapter/entities/content.entity';
         return {
           secret: configService.get('jwt_secret'),
           signOptions: {
-            expiresIn: '30m' // 默认 30 分钟
-          }
-        }
+            expiresIn: '30m', // 默认 30 分钟
+          },
+        };
       },
-      inject: [ConfigService]
+      inject: [ConfigService],
     }),
     UserModule,
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: 'src/.env'
+      envFilePath: 'src/.env',
     }),
     TypeOrmModule.forRootAsync({
       useFactory(configService: ConfigService) {
         return {
-          type: "mysql",
+          type: 'mysql',
           host: configService.get('mysql_server_host'),
           port: configService.get('mysql_server_port'),
           username: configService.get('mysql_server_username'),
@@ -56,31 +56,45 @@ import { Content } from './chapter/entities/content.entity';
           synchronize: true,
           logging: true,
           entities: [
-            User, Role, Permission, Router,
-            Course, Chapter, Content, CourseMaterial,
-            Assignment, Submission
+            User,
+            Role,
+            Permission,
+            Router,
+            Course,
+            Chapter,
+            Content,
+            CourseMaterial,
+            Assignment,
+            Submission,
           ],
           poolSize: 10,
           connectorPackage: 'mysql2',
           extra: {
             authPlugin: 'sha256_password',
-          }
-        }
+          },
+        };
       },
-      inject: [ConfigService]
+      inject: [ConfigService],
     }),
-    UserModule, RedisModule, EmailModule, CourseModule, ChapterModule, AssignmentModule,
+    UserModule,
+    RedisModule,
+    EmailModule,
+    CourseModule,
+    ChapterModule,
+    AssignmentModule,
+    MinioModule,
   ],
   controllers: [AppController],
-  providers: [AppService,
+  providers: [
+    AppService,
     {
       provide: APP_GUARD,
-      useClass: LoginGuard
+      useClass: LoginGuard,
     },
     {
       provide: APP_GUARD,
-      useClass: PermissionGuard
-    }      
+      useClass: PermissionGuard,
+    },
   ],
 })
 export class AppModule { }
