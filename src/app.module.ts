@@ -16,7 +16,7 @@ import { LoginGuard } from './login.guard';
 import { PermissionGuard } from './permission.guard';
 import { CourseModule } from './course/course.module';
 import { Course } from './course/entities/course.entity';
-import { CourseMaterial } from './course/entities/course-material.entity';
+import { CourseMaterial } from './course/entities/material.entity';
 import { Assignment } from './assignment/entities/assignment.entity';
 import { Submission } from './assignment/entities/submission.entity';
 import { ChapterModule } from './chapter/chapter.module';

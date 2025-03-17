@@ -1,6 +1,6 @@
 import { Column, CreateDateColumn, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { User } from '../../user/entities/user.entity';
-import { CourseMaterial } from './course-material.entity';
+import { CourseMaterial } from './material.entity';
 import { Chapter } from '../../chapter/entities/chapter.entity';
 import { Assignment } from '../../assignment/entities/assignment.entity';
 

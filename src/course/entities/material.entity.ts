@@ -7,6 +7,7 @@ export enum MaterialType {
   LINK = 'link'         // 链接
 }
 
+
 @Entity('course_materials')
 export class CourseMaterial {
   @PrimaryGeneratedColumn()

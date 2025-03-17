@@ -5,12 +5,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Assignment } from './entities/assignment.entity';
 import { Submission } from './entities/submission.entity';
 import { User } from '../user/entities/user.entity';
+import { Course } from 'src/course/entities/course.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([
     Assignment,
     Submission,
-    User
+    User,
+    Course
   ])],
   controllers: [AssignmentController],
   providers: [AssignmentService],

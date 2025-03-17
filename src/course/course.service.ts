@@ -6,7 +6,8 @@ import { In, LessThanOrEqual, Like, MoreThanOrEqual, Repository } from 'typeorm'
 import { Course, CourseStatus } from './entities/course.entity';
 import { CourseListVo } from './vo/course-list.vo';
 import { User } from '../user/entities/user.entity';
-
+import { UploadMaterialDto } from './dto/upload-material.dto';
+import { CourseMaterial } from './entities/material.entity';
 @Injectable()
 export class CourseService {
 
@@ -14,7 +15,9 @@ export class CourseService {
     @InjectRepository(Course)
     private courseRepository: Repository<Course>,
     @InjectRepository(User)
-    private userRepository: Repository<User>
+    private userRepository: Repository<User>,
+    @InjectRepository(CourseMaterial)
+    private materialRepository: Repository<CourseMaterial>
   ) { }
 
   async delete(id: number, userId: number) {
@@ -298,6 +301,29 @@ export class CourseService {
     return '取消选课成功';
   }
 
+  async uploadCourseMaterial( uploadMaterialDto: UploadMaterialDto ) {
+    const course = await this.courseRepository.findOne({
+      where: { id: uploadMaterialDto.courseId },
+      relations: ['materials']
+    });
+    
+    if (!course) {
+      throw new NotFoundException(`课程不存在`);
+    }
+
+    const { title, type, url } = uploadMaterialDto;
+
+    const material = new CourseMaterial();
+    material.title = title;
+    material.type = type;
+    material.url = url;
+    material.course = course;
+
+    await this.materialRepository.save(material);
+
+    return '上传成功';
+  }
 
 
+  
 }

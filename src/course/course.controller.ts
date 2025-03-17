@@ -8,6 +8,7 @@ import { LoginGuard } from '../login.guard';
 import { PermissionGuard } from '../permission.guard';
 import { generateParseIntPipe } from 'src/utils';
 import { User } from 'src/user/entities/user.entity';
+import { UploadMaterialDto } from './dto/upload-material.dto';
 
 @ApiTags('课程管理')
 @Controller('course')
@@ -116,8 +117,20 @@ export class CourseController {
     return this.courseService.cancelCourse(userId, courseId);
   }
 
+  /**
+   * 教师上传课程资料
+   */
+  @Post('upload')
+  @RequireLogin()
+  @ApiOperation({ summary: '上传课程资料' })
+  @ApiResponse({ status: 200, description: '上传成功' })
+  @ApiResponse({ status: 401, description: '未授权' })
+  uploadCourseMaterial(@Body() uploadMaterialDto: UploadMaterialDto) {
+    return this.courseService.uploadCourseMaterial( uploadMaterialDto);
+  }
 
-  
+
+
 
 }
 
