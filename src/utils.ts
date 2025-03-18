@@ -30,3 +30,8 @@ export function formatDate(date: Date) {
     hour12: false
   });
 }
+
+export function formatDateToDate(date: string) {
+  //把T和Z去掉
+  return  new Date(date.replace('T', ' ').replace('Z', ''));
+}

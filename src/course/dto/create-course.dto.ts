@@ -13,10 +13,10 @@ export class CreateCourseDto {
   @IsString()
   description: string;
 
-  @ApiProperty({ description: '课程封面图片' })
-  @IsNotEmpty({ message: '课程封面图片不能为空' })
+  @ApiProperty({ description: '课程封面图片', required: false })
+  @IsOptional()
   @IsString()
-  coverImage: string;
+  coverImage?: string;
 
   @ApiProperty({ description: '开始时间', required: false })
   @IsOptional()
@@ -28,8 +28,9 @@ export class CreateCourseDto {
   @IsDateString({}, { message: '结束时间格式错误' })
   endTime?: string;
 
-  @ApiProperty({ description: '教师ID数组', type: [Number] })
+  @ApiProperty({ description: '教师ID数组', type: [Number], required: false })
   @IsArray()
+  @IsOptional()
   @IsNumber({}, { each: true, message: '教师ID必须是数字' })
-  teacherIds: number[];
+  teacherIds?: number[];
 }

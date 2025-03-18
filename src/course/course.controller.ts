@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, HttpStatus, UseGuards, Query, DefaultValuePipe, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, HttpStatus, UseGuards, Query, DefaultValuePipe, ParseIntPipe, ParseArrayPipe } from '@nestjs/common';
 import { CourseService } from './course.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
@@ -23,8 +23,9 @@ export class CourseController {
   @ApiResponse({ status: 401, description: '未授权' })
   async create(
     @Body() createCourseDto: CreateCourseDto,
+    @UserInfo('id') userId: number
   ) {
-    return this.courseService.create(createCourseDto);
+    return this.courseService.create(createCourseDto, userId);
   }
 
   @Get()
@@ -65,8 +66,6 @@ export class CourseController {
 
   
   @Get('delete')
-  @RequirePermission('TC','AD') // 需要教师创建权限
-  @RequireLogin()
   @ApiOperation({ summary: '删除课程' })
   @ApiResponse({ status: 200, description: '删除成功' })
   @ApiResponse({ status: 401, description: '未授权' })
@@ -77,6 +76,25 @@ export class CourseController {
   ) {
     // TODO: 验证课程是否属于当前教师
     return this.courseService.delete(+id, userId);
+  }
+
+  @Post('batchDelete')
+  @ApiOperation({ summary: '删除课程' })
+  @ApiResponse({ status: 200, description: '删除成功' })
+  @ApiResponse({ status: 401, description: '未授权' })
+  @ApiResponse({ status: 404, description: '课程不存在' })
+  async batchRemove(
+    @Body('ids', new ParseArrayPipe({ items: Number, separator: ',' })) ids: number[],
+    @UserInfo('id') userId: number
+  ) {
+    // TODO: 验证课程是否属于当前教师
+    for (const id of ids) {
+      await this.courseService.delete(+id, userId);
+    }
+    return {
+      message: '删除成功',
+      data: ids
+    };
   }
 
   /**
@@ -129,7 +147,7 @@ export class CourseController {
     return this.courseService.uploadCourseMaterial( uploadMaterialDto);
   }
 
-
+  //todo删除某个资料
 
 
 }

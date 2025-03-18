@@ -4,11 +4,12 @@ import { ChapterController } from './chapter.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Chapter } from './entities/chapter.entity';
 import { Content } from './entities/content.entity';
-
+import { Course } from '../course/entities/course.entity';
 @Module({
   imports: [TypeOrmModule.forFeature([
     Chapter,
-    Content
+    Content,
+    Course
   ])],
   controllers: [ChapterController],
   providers: [ChapterService],

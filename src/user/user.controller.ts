@@ -46,6 +46,8 @@ export class UserController {
     return await this.userService.register(registerUser);
   }
 
+  
+
   /**
    * 发送更改密码验证码
    * @param address 
@@ -136,6 +138,13 @@ export class UserController {
     return vo;
   }
 
+  /**根据id查询用户信息 */
+  @Get('getById/:id')
+  @RequireLogin()
+  async infoById(@Param('id') id: number) {
+    return await this.userService.findUserDetailById(id);
+  }
+
   @Post(['update_password', 'admin/update_password'])
   @RequireLogin()
   async updatePassword(@UserInfo('userId') userId: number, @Body() passwordDto: UpdateUserPasswordDto) {
@@ -179,8 +188,8 @@ export class UserController {
   /**
    * 删除用户
    */
-  @Get('delete')
-  async delete(@Query('id') id: number) {
+  @Get('delete/:id')
+  async delete(@Param('id') id: number) {
     return await this.userService.delete(id);
   }
 

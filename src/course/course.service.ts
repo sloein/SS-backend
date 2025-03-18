@@ -8,6 +8,7 @@ import { CourseListVo } from './vo/course-list.vo';
 import { User } from '../user/entities/user.entity';
 import { UploadMaterialDto } from './dto/upload-material.dto';
 import { CourseMaterial } from './entities/material.entity';
+import { formatDateToDate } from 'src/utils';
 @Injectable()
 export class CourseService {
 
@@ -31,39 +32,64 @@ export class CourseService {
     }
 
     //判断是否是管理员
-    const foundUser = await this.userRepository.findOne({
-      where: { id: userId }
+    // const foundUser = await this.userRepository.findOne({
+    //   where: { id: userId }
+    // });
+
+    // const isMaster = course.teachers.some(teacher => teacher.id === userId);
+    // if (!foundUser?.isAdmin && !isMaster) {
+    //   throw new UnauthorizedException('您没有权限删除课程');
+    // }
+
+    //获取课程的所有资料
+    const materials = await this.materialRepository.find({
+      where: { course: { id } }
     });
 
-    const isMaster = course.teachers.some(teacher => teacher.id === userId);
-    if (!foundUser?.isAdmin && !isMaster) {
-      throw new UnauthorizedException('您没有权限删除课程');
-    }
+    //todo删除minio中的资料文件
+
 
     await this.courseRepository.delete(id);
+
+
+
     return '删除课程成功';
   }
 
-  async create(createCourseDto: CreateCourseDto) {
+  async create(createCourseDto: CreateCourseDto, userId: number) {
     const { title, description, coverImage, startTime, endTime, teacherIds } = createCourseDto;
-
-    // 验证教师是否存在
-    const teachers = await this.userRepository.find({
-      where: {
-        id: In(teacherIds)
-      }
-    });
-
-    if (teachers.length !== teacherIds.length) {
-      throw new BadRequestException('部分教师ID不存在');
-    }
 
     // 创建新课程实例
     const course = new Course();
+    if (teacherIds) {
+      // 验证教师是否存在
+      const teachers = await this.userRepository.find({
+        where: {
+          id: In(teacherIds)
+        }
+      });
+
+      if (teachers.length !== teacherIds.length) {
+        throw new BadRequestException('部分教师ID不存在');
+      } 
+      course.teachers = teachers;
+    } else {
+      const teacher = await this.userRepository.findOne({
+        where: {
+          id: userId
+        }
+      });
+      if (!teacher) {
+        throw new BadRequestException('教师不存在');
+      }
+      course.teachers = [teacher];
+    }
+
+
     course.title = title;
     course.description = description;
-    course.coverImage = coverImage;
-    course.teachers = teachers;
+    course.coverImage = coverImage || '';
+
 
     // 设置开始和结束时间
     if (startTime) {
@@ -154,6 +180,7 @@ export class CourseService {
     const course = await this.courseRepository
       .createQueryBuilder('course')
       .leftJoinAndSelect('course.teachers', 'teachers')
+      .leftJoinAndSelect('course.students', 'students')
       .leftJoinAndSelect('course.chapters', 'chapters')
       .leftJoinAndSelect('course.materials', 'materials')
       .leftJoinAndSelect('course.assignments', 'assignments')
@@ -163,6 +190,9 @@ export class CourseService {
         'teachers.id',
         'teachers.username',
         'teachers.nickName',
+        'students.id',
+        'students.username',
+        'students.nickName',
         'chapters',
         'contents',
         'materials',
@@ -172,7 +202,7 @@ export class CourseService {
         'assignments.deadline'
       ])
       .where('course.id = :id', { id })
-      .orderBy('chapters.order', 'ASC')
+      .orderBy('chapters.order', 'ASC') 
       .addOrderBy('materials.createdAt', 'DESC')
       .addOrderBy('assignments.deadline', 'ASC')
       .getOne();
@@ -211,11 +241,11 @@ export class CourseService {
 
     // 处理日期字段
     if (startTime) {
-      course.startTime = new Date(startTime);
+      course.startTime = formatDateToDate(startTime);
     }
     if (endTime) {
-      course.endTime = new Date(endTime);
-    }
+      course.endTime = formatDateToDate(endTime);
+    } 
 
     // 更新其他字段
     Object.assign(course, rest);
@@ -301,12 +331,12 @@ export class CourseService {
     return '取消选课成功';
   }
 
-  async uploadCourseMaterial( uploadMaterialDto: UploadMaterialDto ) {
+  async uploadCourseMaterial(uploadMaterialDto: UploadMaterialDto) {
     const course = await this.courseRepository.findOne({
       where: { id: uploadMaterialDto.courseId },
       relations: ['materials']
     });
-    
+
     if (!course) {
       throw new NotFoundException(`课程不存在`);
     }
@@ -325,5 +355,5 @@ export class CourseService {
   }
 
 
-  
+
 }

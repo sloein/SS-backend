@@ -16,9 +16,6 @@ export class Chapter {
   @Column()
   order: number;
 
-  @Column({ name: 'course_id' })
-  courseId: number;
-
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

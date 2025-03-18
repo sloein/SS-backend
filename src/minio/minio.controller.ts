@@ -1,4 +1,4 @@
-import { Controller, Get, Inject, Query, UseGuards, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Inject, Query, UseGuards, HttpException, HttpStatus, Param } from '@nestjs/common';
 import * as Minio from 'minio';
 import { RequireLogin } from '../custom.decorator';
 import { LoginGuard } from '../login.guard';
@@ -12,11 +12,15 @@ export class MinioController {
 
     @Get('presignedUrl')
     @RequireLogin()
-    async presignedPutObject(@Query('name') name: string) {
+    async presignedPutObject(@Query('fileName') fileName: string) {
         try {
             // 生成唯一的文件名，防止覆盖
             const timestamp = new Date().getTime();
-            const uniqueName = `${timestamp}-${name}`;
+
+            //处理特殊符号
+            fileName = encodeURIComponent(fileName);
+            
+            const uniqueName = `${timestamp}-${fileName}`;
             
             // 获取预签名URL，有效期1小时
             const url = await this.minioClient.presignedPutObject('studysystem', uniqueName, 3600);
@@ -67,4 +71,17 @@ export class MinioController {
             );
         }
     }
+
+    /**
+     * 删除文件
+     */
+    @Get('delete')
+    @RequireLogin()
+    async deleteFile(@Query('name') name: string) {
+        await this.minioClient.removeObject('studysystem', name);
+        return {
+            message: '文件删除成功'
+        };
+    }
+
 }
