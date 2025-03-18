@@ -18,8 +18,8 @@ export class MinioController {
             const timestamp = new Date().getTime();
 
             //处理特殊符号
-            fileName = encodeURIComponent(fileName);
-            
+            // fileName = encodeURIComponent(fileName);
+            //算上-14位
             const uniqueName = `${timestamp}-${fileName}`;
             
             // 获取预签名URL，有效期1小时

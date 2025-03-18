@@ -1,11 +1,11 @@
 import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { Course } from './course.entity';
 
-export enum MaterialType {
-  DOCUMENT = 'document', // 文档
-  VIDEO = 'video',      // 视频
-  LINK = 'link'         // 链接
-}
+// export enum MaterialType {
+//   DOCUMENT = 'document', // 文档
+//   VIDEO = 'video',      // 视频
+//   LINK = 'link'         // 链接
+// }
 
 
 @Entity('course_materials')
@@ -16,12 +16,17 @@ export class CourseMaterial {
   @Column()
   title: string;
 
-  @Column({
-    type: 'enum',
-    enum: MaterialType
-  })
-  type: MaterialType;
+  // @Column({
+  //   type: 'enum',
+  //   enum: MaterialType
+  // })
+  // type: MaterialType;
 
+  @Column({
+    length: 2048,  // 增加长度限制
+    comment: '文件URL'
+})
+  type: string;
   @Column()
   url: string;
 
