@@ -1,7 +1,6 @@
 import { IsEnum, IsNumber, IsString } from "class-validator";
 
 import { IsNotEmpty } from "class-validator";
-import { ContentType } from "../entities/content.entity";
 
 export class CreateContentDto {
     @IsNotEmpty({ message: '章节ID不能为空' })
@@ -13,8 +12,7 @@ export class CreateContentDto {
     title: string;  
  
     @IsNotEmpty({ message: '内容类型不能为空' })
-    @IsEnum(ContentType, { message: '内容类型必须是视频、文档' })
-    type: ContentType;
+    type: string;
 
     @IsNotEmpty({ message: '内容URL不能为空' })
     @IsString({ message: '内容URL必须是字符串' })

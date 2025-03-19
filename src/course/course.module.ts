@@ -8,16 +8,20 @@ import { CourseMaterial } from './entities/material.entity';
 import { Assignment } from '../assignment/entities/assignment.entity';
 import { Submission } from '../assignment/entities/submission.entity';
 import { User } from 'src/user/entities/user.entity';
+import { MinioModule } from '../minio/minio.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([
-    Course, 
-    Chapter,  
-    CourseMaterial,
-    Assignment,
-    Submission,
-    User
-  ])],
+  imports: [
+    TypeOrmModule.forFeature([
+      Course, 
+      Chapter,  
+      CourseMaterial,
+      Assignment,
+      Submission,
+      User
+    ]),
+    MinioModule
+  ],
   controllers: [CourseController],
   providers: [CourseService],
   exports: [CourseService]

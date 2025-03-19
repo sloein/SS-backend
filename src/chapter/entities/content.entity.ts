@@ -15,11 +15,8 @@ export class Content {
   @Column()
   title: string;
 
-  @Column({
-    type: 'enum',
-    enum: ContentType
-  })
-  type: ContentType;
+  @Column()
+  type: string;
 
   @Column({ name: 'content_url' })
   contentUrl: string;

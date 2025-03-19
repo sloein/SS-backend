@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Query, Put } from '@
 import { ChapterService } from './chapter.service';
 import { CreateChapterDto } from './dto/create-chapter.dto';
 import { UpdateChapterDto } from './dto/update-chapter.dto';
+import { CreateContentDto } from './dto/create-content.dto';
 
 @Controller('chapter')
 export class ChapterController {
@@ -46,6 +47,14 @@ export class ChapterController {
   delete(@Query('id') id: number) {
     return this.chapterService.delete(id);
   }
+
+  /**
+   * 添加内容
+   */
+  @Post('addContent')
+  addContent(@Body() addContentDto: CreateContentDto) {
+    return this.chapterService.addContent(addContentDto);
+  } 
 
 
   

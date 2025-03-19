@@ -125,17 +125,9 @@ export class UserController {
       throw new UnauthorizedException('用户不存在');
     }
 
-    const vo = new UserDetailVo();
-    vo.id = user.id;
-    vo.email = user.email;
-    vo.username = user.username;
-    vo.avatar = user.avatar;
-    vo.phoneNumber = user.phoneNumber;
-    vo.nickName = user.nickName;
-    vo.createTime = user.createTime;
-    vo.isFrozen = user.isFrozen;
+  
 
-    return vo;
+    return user;
   }
 
   /**根据id查询用户信息 */

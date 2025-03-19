@@ -33,6 +33,7 @@ export class MinioController {
                 },
                 message: '获取上传链接成功'
             };
+            
         } catch (error) {
             console.log(error);
             throw new HttpException(
@@ -84,4 +85,39 @@ export class MinioController {
         };
     }
 
+    @Get('download')
+    // @RequireLogin()
+    async getDownloadUrl(@Query('fileName') fileName: string) {
+
+        try {
+
+            // 生成预签名下载URL，有效期1小时
+            const url = await this.minioClient.presignedGetObject(
+                'studysystem',  // bucket名称
+                fileName,       // 文件名
+                3600           // 过期时间（秒）
+            );
+            
+            return {
+                code: 200,
+                data: {
+                    url
+                },
+                message: '获取下载链接成功'
+            };
+
+        } catch (error) {
+            throw new HttpException(
+                {
+                    message: '获取下载链接失败',
+                    error: error
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+
+    }
+
 }
+
+

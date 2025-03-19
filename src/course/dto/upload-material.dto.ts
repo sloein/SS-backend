@@ -11,8 +11,6 @@ export class UploadMaterialDto {
   @IsString()
   title: string;
 
-  @IsNotEmpty({ message: '类型不能为空' })
- 
   type: string;
 
   @IsNotEmpty({ message: 'URL不能为空' })

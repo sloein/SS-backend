@@ -25,7 +25,7 @@ export class CourseMaterial {
   @Column({
     length: 2048,  // 增加长度限制
     comment: '文件URL'
-})
+  })
   type: string;
   @Column()
   url: string;

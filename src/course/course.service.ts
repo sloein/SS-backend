@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, UnauthorizedException, Inject } from '@nestjs/common';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -9,6 +9,12 @@ import { User } from '../user/entities/user.entity';
 import { UploadMaterialDto } from './dto/upload-material.dto';
 import { CourseMaterial } from './entities/material.entity';
 import { formatDateToDate } from 'src/utils';
+import * as Minio from 'minio';
+import { UpdateChapterOrderDto } from './dto/update-chapter-order.dto';
+import { UpdateChapterOrderVo } from './vo/chapter-order.vo';
+import { Chapter } from '../chapter/entities/chapter.entity';
+import { UpdateChapterTitleDto } from './dto/update-chapter-title.dto';
+
 @Injectable()
 export class CourseService {
 
@@ -18,7 +24,11 @@ export class CourseService {
     @InjectRepository(User)
     private userRepository: Repository<User>,
     @InjectRepository(CourseMaterial)
-    private materialRepository: Repository<CourseMaterial>
+    private materialRepository: Repository<CourseMaterial>,
+    @InjectRepository(Chapter)
+    private chapterRepository: Repository<Chapter>,
+    @Inject('MINIO_CLIENT')
+    private minioClient: Minio.Client
   ) { }
 
   async delete(id: number, userId: number) {
@@ -349,11 +359,150 @@ export class CourseService {
     material.url = url;
     material.course = course;
 
-    await this.materialRepository.save(material);
-
-    return '上传成功';
+    const savedMaterial = await this.materialRepository.save(material);
+    
+    return savedMaterial;
   }
 
+  async deleteMaterial(materialId: number) {
+    const material = await this.materialRepository.findOne({
+        where: { id: materialId }
+    });
 
+    if (!material) {
+        throw new Error('资料不存在');
+    }
+
+    try {
+        // 从URL中提取文件名
+        const fileName = material.url.split('/').pop();
+        
+        // 从MinIO中删除文件
+        await this.minioClient.removeObject('studysystem', fileName||'');
+        
+        // 从数据库中删除记录
+        await this.materialRepository.remove(material);
+        
+        return '删除成功';
+    } catch (error) {
+        throw new Error('删除失败：' + error.message);
+    }
+  }
+
+  async getMySelectCourses(userId: number, pageNo: number, pageSize: number, title: string, description: string) {
+    const skipCount = (pageNo - 1) * pageSize;
+
+    const queryBuilder = this.courseRepository
+      .createQueryBuilder('course')
+      .leftJoinAndSelect('course.students', 'students')
+      .leftJoinAndSelect('course.chapters', 'chapters')
+      .select([
+        'course',
+        'chapters.id',
+        'chapters.title',
+        'chapters.order'
+      ])
+      .skip(skipCount)
+      .take(pageSize)
+      .orderBy('course.createdAt', 'DESC')
+      .addOrderBy('chapters.order', 'ASC');
+    
+    queryBuilder.where('students.id = :userId', { userId });
+
+    if (title) {
+      queryBuilder.andWhere('course.title LIKE :title', { title: `%${title}%` });
+    }
+    if (description) {
+      queryBuilder.andWhere('course.description LIKE :description', { description: `%${description}%` });
+    }
+
+
+    const [courses, totalCount] = await queryBuilder.getManyAndCount();
+
+    console.log(courses);
+
+    const vo = new CourseListVo();
+    vo.courses = courses;
+    vo.totalCount = totalCount;
+
+    return vo;
+
+  }
+
+  async updateChapterOrder(updateChapterOrderDto: UpdateChapterOrderDto): Promise<UpdateChapterOrderVo> {
+    const { courseId, chapterIds } = updateChapterOrderDto;
+
+    // 验证课程是否存在
+    const course = await this.courseRepository.findOne({
+      where: { id: courseId },
+      relations: ['chapters']
+    });
+
+    if (!course) {
+      throw new NotFoundException(`课程 #${courseId} 不存在`);
+    }
+
+    // 验证所有章节是否属于该课程
+    const chapters = await this.chapterRepository.find({
+      where: {
+        id: In(chapterIds),
+        course: { id: courseId }
+      }
+    });
+
+    if (chapters.length !== chapterIds.length) {
+      throw new BadRequestException('部分章节不属于该课程');
+    }
+
+    // 更新章节顺序
+    const updatedChapters = await Promise.all(
+      chapterIds.map(async (chapterId, index) => {
+        const chapter = chapters.find(c => c.id === chapterId);
+        if (!chapter) {
+          throw new BadRequestException(`章节 #${chapterId} 不存在`);
+        }
+        chapter.order = index + 1;
+        return await this.chapterRepository.save(chapter);
+      })
+    );
+
+    // 构建返回数据
+    const vo = new UpdateChapterOrderVo();
+    vo.courseId = courseId;
+    vo.chapters = updatedChapters.map(chapter => ({
+      id: chapter.id,
+      title: chapter.title,
+      order: chapter.order
+    }));
+
+    return vo;
+  }
+
+  async updateChapterTitle(updateChapterTitleDto: UpdateChapterTitleDto) {
+    const { chapterId, title } = updateChapterTitleDto;
+
+    // 查找章节
+    const chapter = await this.chapterRepository.findOne({
+      where: { id: chapterId },
+      relations: ['course', 'course.teachers']
+    });
+
+    if (!chapter) {
+      throw new NotFoundException(`章节 #${chapterId} 不存在`);
+    }
+
+    // 更新章节标题
+    chapter.title = title;
+    await this.chapterRepository.save(chapter);
+
+    return {
+      code: 200,
+      msg: '更新成功',
+      data: {
+        id: chapter.id,
+        title: chapter.title
+      }
+    };
+  }
 
 }

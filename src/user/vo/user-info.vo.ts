@@ -14,4 +14,10 @@ export class UserDetailVo {
     isFrozen: boolean;
 
     createTime: Date;
+
+    roles: string[];
+
+    permissions: string[];  
+
+    isAdmin: boolean;
 }

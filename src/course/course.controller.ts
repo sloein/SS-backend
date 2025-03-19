@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, HttpStatus, UseGuards, Query, DefaultValuePipe, ParseIntPipe, ParseArrayPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, HttpStatus, UseGuards, Query, DefaultValuePipe, ParseIntPipe, ParseArrayPipe, Inject } from '@nestjs/common';
 import { CourseService } from './course.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
@@ -9,12 +9,16 @@ import { PermissionGuard } from '../permission.guard';
 import { generateParseIntPipe } from 'src/utils';
 import { User } from 'src/user/entities/user.entity';
 import { UploadMaterialDto } from './dto/upload-material.dto';
+import { UpdateChapterOrderDto } from './dto/update-chapter-order.dto';
+import { UpdateChapterDto } from 'src/chapter/dto/update-chapter.dto';
+import { UpdateChapterTitleDto } from './dto/update-chapter-title.dto';
 
 @ApiTags('课程管理')
 @Controller('course')
 @UseGuards(LoginGuard, PermissionGuard)
 export class CourseController {
   constructor(private readonly courseService: CourseService) {}
+
 
   @Post()
   @RequirePermission('TC','AD') // 需要教师创建权限
@@ -123,6 +127,22 @@ export class CourseController {
   }
 
   /**
+   * 获取我的选修课程
+   */
+  @Get('mySelect')
+  @RequireLogin()
+  @ApiOperation({ summary: '获取我的选修课程' })
+  @ApiResponse({ status: 200, description: '获取成功' })
+  @ApiResponse({ status: 401, description: '未授权' })
+  getMySelectCourses(@UserInfo('id') userId: number, @Query('pageNo', new DefaultValuePipe(1), generateParseIntPipe('pageNo')) pageNo: number,
+    @Query('pageSize', new DefaultValuePipe(2), generateParseIntPipe('pageSize')) pageSize: number,
+    @Query('title') title: string,
+    @Query('description') description: string) {
+    return this.courseService.getMySelectCourses(userId, pageNo, pageSize, title, description);
+  }
+  
+
+  /**
    * 取消选课
    */
   @Post('cancel')
@@ -147,8 +167,34 @@ export class CourseController {
     return this.courseService.uploadCourseMaterial( uploadMaterialDto);
   }
 
-  //todo删除某个资料
+  //删除某个资料
+  @Get('deleteMaterial/:id')
+  @RequireLogin()
+  @ApiOperation({ summary: '删除课程资料' })
+  @ApiResponse({ status: 200, description: '删除成功' })
+  @ApiResponse({ status: 401, description: '未授权' })
+  deleteMaterial(@Param('id', new ParseIntPipe()) id: number) {
+    return this.courseService.deleteMaterial(id);
+  }
 
+  @Post('chapter/updateOrder')
+  @RequireLogin()
+  @ApiOperation({ summary: '更新章节顺序' })
+  @ApiResponse({ status: 200, description: '更新成功' })
+  async updateChapterOrder(@Body() updateChapterOrderDto: UpdateChapterOrderDto) {
+    return this.courseService.updateChapterOrder(updateChapterOrderDto);
+  }
+
+
+  
+
+  @Post('chapter/updateTitle')
+  @RequireLogin()
+  @ApiOperation({ summary: '更新章节标题' })
+  @ApiResponse({ status: 200, description: '更新成功' })
+  async updateChapterTitle(@Body() updateChapterTitleDto: UpdateChapterTitleDto) {
+    return this.courseService.updateChapterTitle(updateChapterTitleDto);
+  }
 
 }
 

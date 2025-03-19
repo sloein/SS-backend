@@ -13,6 +13,7 @@ import { UpdateUserPasswordDto } from './dto/update-user-password.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserListVo } from './vo/user-list.vo';
 import { Router } from './entities/router.entity';
+import { UserDetailVo } from './vo/user-info.vo';
 @Injectable()
 export class UserService {
     private logger = new Logger();
@@ -83,13 +84,12 @@ export class UserService {
     }
 
     async login(loginUserDto: LoginUserDto, isAdmin: boolean) {
-        const user = await this.userRepository.findOne({
-            where: {
-                username: loginUserDto.username,
-                isAdmin
-            },
-            relations: ['roles', 'roles.permissions']
-        });
+        const user = await this.userRepository
+        .createQueryBuilder('user')
+        .leftJoinAndSelect('user.roles', 'roles')
+        .leftJoinAndSelect('roles.permissions', 'permissions')
+        .where('user.username = :username', { username: loginUserDto.username })
+        .getOne();
 
         if (!user) {
             throw new HttpException('用户不存在', HttpStatus.UNAUTHORIZED);
@@ -98,7 +98,7 @@ export class UserService {
         if (user.password !== md5(loginUserDto.password)) {
             throw new HttpException('密码错误', HttpStatus.UNAUTHORIZED);
         }
-
+        
         const vo = new LoginUserVo();
         vo.userInfo = {
             id: user.id,
@@ -221,13 +221,32 @@ export class UserService {
     }
 
     async findUserDetailById(userId: number) {
-        const user = await this.userRepository.findOne({
-            where: {
-                id: userId
-            }
-        });
+        const user = await this.userRepository
+        .createQueryBuilder('user')
+        .leftJoinAndSelect('user.roles', 'roles')
+        .leftJoinAndSelect('roles.permissions', 'permissions')
+        .where('user.id = :id', { id: userId })
+        .getOne();
 
-        return user;
+        if (!user) {
+            throw new HttpException('用户不存在', HttpStatus.BAD_REQUEST);
+        }
+
+        console.log('uuuuuuuuuuser',user);
+
+        const vo = new UserDetailVo();
+        vo.id = user.id;
+        vo.isAdmin = user.isAdmin;
+        vo.username = user.username;
+        vo.nickName = user.nickName;
+        vo.email = user.email;
+        vo.avatar = user.avatar;
+        vo.phoneNumber = user.phoneNumber;
+        vo.roles = user.roles.map(item => item.name);
+       
+        console.log('vo',vo.roles);
+
+        return vo;
     }
 
     async updatePassword(userId: number, passwordDto: UpdateUserPasswordDto) {
