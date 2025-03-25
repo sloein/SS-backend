@@ -351,13 +351,14 @@ export class CourseService {
       throw new NotFoundException(`课程不存在`);
     }
 
-    const { title, type, url } = uploadMaterialDto;
+    const { title, type, url, fileHash } = uploadMaterialDto;
 
     const material = new CourseMaterial();
     material.title = title;
     material.type = type;
     material.url = url;
     material.course = course;
+    material.fileHash = fileHash;
 
     const savedMaterial = await this.materialRepository.save(material);
     

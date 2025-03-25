@@ -30,6 +30,10 @@ export class CourseMaterial {
   @Column()
   url: string;
 
+
+  @Column({ name: 'file_hash', nullable: true })
+  fileHash: string;
+
   @Column({ name: 'file_size', nullable: true })
   fileSize: number;
 

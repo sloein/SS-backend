@@ -24,4 +24,8 @@ export class UploadMaterialDto {
   @IsNotEmpty({ message: '文件大小不能为空' })
   @IsNumber()
   fileSize: number;
+
+  @IsNotEmpty({ message: '文件哈希值不能为空' })
+  @IsString()
+  fileHash: string;
 }

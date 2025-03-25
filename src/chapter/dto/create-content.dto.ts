@@ -21,5 +21,11 @@ export class CreateContentDto {
     @IsNotEmpty({ message: '排序顺序不能为空' })
     @IsNumber({}, { message: '排序顺序必须是数字' })
     order: number;
+
+    //hash
+    @IsNotEmpty({ message: '文件哈希值不能为空' })
+    @IsString({ message: '文件哈希值必须是字符串' })
+    fileHash: string;
+
 }
     

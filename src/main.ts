@@ -8,10 +8,18 @@ import { CustomExceptionFilter } from './custom-exception.filter';
 import { SwaggerModule } from '@nestjs/swagger';
 import { DocumentBuilder } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import * as bodyParser from 'body-parser';
+
 async function bootstrap() {
 
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  // 增加请求体大小限制
+  app.use(bodyParser.json({ limit: '50mb' }));
+  app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+  
+  app.enableCors(); // 允许跨域请求
+  
   app.useGlobalPipes(new ValidationPipe());
   app.useGlobalInterceptors(new FormatResponseInterceptor());
   app.useGlobalInterceptors(new InvokeRecordInterceptor());
@@ -21,9 +29,9 @@ async function bootstrap() {
   }));
   app.useGlobalFilters(new CustomExceptionFilter());
 
-  app.useStaticAssets('uploads', {
-    prefix: '/uploads'
-});
+//   app.useStaticAssets('uploads', {
+//     prefix: '/uploads'
+// });允许直接访问上传的文件
 
 
   const config = new DocumentBuilder()
@@ -36,8 +44,10 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService);
   const port = configService.get('nest_server_port');
+  console.log(`应用正在启动，端口: ${port}`);
+  
   await app.listen(port);
-
+  console.log(`应用已成功启动: http://localhost:${port}`);
 }
 
 bootstrap();
