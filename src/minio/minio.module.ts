@@ -1,11 +1,13 @@
-import { Global, Module } from '@nestjs/common';
+import { forwardRef, Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MinioController } from './minio.controller';
 import * as Minio from 'minio';
 import * as https from 'https';
+import { CourseModule } from '../course/course.module';
 
 @Global()
 @Module({
+    imports: [forwardRef(() => CourseModule)],
     providers: [
         {
             provide: 'MINIO_CLIENT',

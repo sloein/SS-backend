@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { FormatResponseInterceptor } from './format-response.interceptor';
 import { InvokeRecordInterceptor } from './invoke-record.interceptor';
@@ -11,8 +11,12 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import * as bodyParser from 'body-parser';
 
 async function bootstrap() {
-
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const logger = new Logger('Bootstrap');
+  
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    logger: ['error', 'warn', 'log', 'debug', 'verbose'],
+    bufferLogs: true,
+  });
 
   // 增加请求体大小限制
   app.use(bodyParser.json({ limit: '50mb' }));
@@ -44,10 +48,13 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService);
   const port = configService.get('nest_server_port');
-  console.log(`应用正在启动，端口: ${port}`);
   
+  logger.log(`应用正在启动，端口: ${port}`);
   await app.listen(port);
-  console.log(`应用已成功启动: http://localhost:${port}`);
+  logger.log(`应用已成功启动: http://localhost:${port}`);
+  
+  // 输出所有缓冲的日志
+  app.flushLogs();
 }
 
 bootstrap();

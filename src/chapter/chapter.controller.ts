@@ -11,7 +11,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('chapter')
 export class ChapterController {
-  constructor(private readonly chapterService: ChapterService) {}
+  constructor(private readonly chapterService: ChapterService) { }
 
   /**
    * 创建章节
@@ -59,7 +59,7 @@ export class ChapterController {
   @Post('addContent')
   addContent(@Body() addContentDto: CreateContentDto) {
     return this.chapterService.addContent(addContentDto);
-  } 
+  }
 
   /**
    * 检查文件是否存在
@@ -69,7 +69,7 @@ export class ChapterController {
     console.log("检查文件是否存在", checkExistDto)
     return this.chapterService.checkExist(checkExistDto);
   }
-  
+
   /**
    * 初始化分片上传
    */
@@ -81,41 +81,10 @@ export class ChapterController {
   /**
    * 分片上传
    */
-  @Post('multipart/upload')
-  @UseInterceptors(FileInterceptor('chunk'))
-  async uploadMultipart(
-    @UploadedFile() file: Express.Multer.File,
-    @Body() uploadMultipartDto: Omit<UploadMultipartDto, 'chunk'>
-  ) {
-    if (!file || !file.buffer) {
-      console.error('未接收到文件或文件为空');
-      throw new Error('未接收到文件或文件为空');
-    }
-    
-    // 合并文件和其他参数
-    const fullDto = {
-      ...uploadMultipartDto,
-      chunk: file.buffer
-    };
-    
-    console.log('接收到分片上传请求', {
-      objectName: uploadMultipartDto.objectName,
-      partNumber: uploadMultipartDto.partNumber,
-      uploadID: uploadMultipartDto.uploadID,
-      fileSize: file.size,
-      bucketName: uploadMultipartDto.bucketName,
-      bufferLength: file.buffer.length
-    });
-    
-    return this.chapterService.uploadMultipart(fullDto);
-  }
 
-  /**
-   * 完成分片上传
-   */
-  @Post('multipart/complete')
-  completeMultipart(@Body() completeMultipartDto: CompleteMultipartDto) {
-    return this.chapterService.completeMultipart(completeMultipartDto);
-  }
+
+
+
+
 
 }

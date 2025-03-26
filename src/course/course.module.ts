@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { CourseService } from './course.service';
 import { CourseController } from './course.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -20,7 +20,7 @@ import { MinioModule } from '../minio/minio.module';
       Submission,
       User
     ]),
-    MinioModule
+    forwardRef(() => MinioModule)
   ],
   controllers: [CourseController],
   providers: [CourseService],
