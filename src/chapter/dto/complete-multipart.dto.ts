@@ -11,6 +11,8 @@ export class PartInfo {
 
 export class CompleteMultipartDto {
 
+  chapterId: number;
+
   uploadId: string;
 
  

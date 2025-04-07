@@ -99,30 +99,45 @@ export class AssignmentService {
       relations: ['submissions']
     });
 
+    //查找这个课程共有多少学生
+    const course = await this.courseRepository.findOne({
+      where: { assignments: { id } },
+      relations: ['students']
+    });
+    if (!course) {
+      throw new NotFoundException('课程不存在');
+    }
+    const studentCount = course.students.length;
+
     if (!assignment) {
       throw new NotFoundException('作业不存在');
     }
 
-    //判断是学生还是老师
-    const isStudent = user.roles.some(role => role.name === 'student');
 
-    if (isStudent) {
-      const submission = await this.submissionRepository.findOne({
-        where: {
-          assignment: { id },
-          student: { id: user.id }
-        }
-      });
-    }
-    const submission = await this.submissionRepository.findOne({
+    const submissions = await this.submissionRepository.findAndCount({
       where: {
         assignment: { id }
-      }
+      },
+      relations: ['student']
     });
+
+    const submissionCount = submissions[1];
+
+    // 提取学生姓名到submission对象
+    const studentNames = submissions[0].map(submission => {
+      return {
+        ...submission,
+        studentName: submission.student.username
+      };
+    });
+
 
     return {
       ...assignment,
-      mySubmission: submission || null
+      submission: studentNames,
+      submissionCount,
+      totalStudents: studentCount,
+      
     };
   }
 

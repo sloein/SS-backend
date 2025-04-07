@@ -50,9 +50,9 @@ export class AssignmentController {
   }
 
   // 查看作业详情
-  @Get('detail')
+  @Get('detail/:id')
   @RequireLogin()
-  getAssignmentDetail(@Query('id') id: number, @UserInfo() user: User) {
+  getAssignmentDetail(@Param('id') id: number, @UserInfo() user: User) {
     return this.assignmentService.getAssignmentDetail(id, user);
   }
 

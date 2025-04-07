@@ -208,6 +208,9 @@ export class ChapterService {
     
     console.log(`初始化分片上传 - uploadId: ${uploadId}, key: ${key}`);
     
+    
+
+
     return {
       uploadId,
       key,
@@ -288,6 +291,25 @@ export class ChapterService {
     // 更新上传状态
     this.uploadDetails[uploadId].status = 'processing';
     this.uploadDetails[uploadId].totalParts = etags.length;
+
+    const keyName = key.split('.')[0].split('-')[0]+'.'+key.split('.')[1];
+ 
+    // 创建初始内容记录
+    const content = this.contentRepository.create({
+      chapter: {
+        id: completeMultipartDto.chapterId
+      },
+      title: path.basename(keyName),
+      type: this.getContentType(contentType),
+      contentUrl: '', // 初始为空，处理完成后更新
+      fileHash: '', // 初始为空，处理完成后更新
+      status: ContentStatus.PROCESSING,
+      order: 0,
+      size: 0, // 初始为0，处理完成后更新
+      uploadID: uploadId,
+    });
+    
+    const savedContent = await this.contentRepository.save(content);
     
     // 立即返回成功响应，让前端可以继续操作
     const response = {
@@ -295,14 +317,20 @@ export class ChapterService {
       uploadId,
       key,
       bucketName,
-      status: 'processing'
+      status: 'processing',
+      contentId: savedContent.id
     };
     
     // 在后台异步处理文件合并
-    this.processMultipartUpload(uploadId, key, etags, bucketName, contentType).catch(error => {
+    this.processMultipartUpload(uploadId, key, etags, bucketName, contentType, savedContent.id).catch(error => {
       console.error('后台处理分片上传失败:', error);
       this.uploadDetails[uploadId].status = 'failed';
       this.uploadDetails[uploadId].error = error.message;
+      
+      // 更新内容状态为失败
+      this.contentRepository.update(savedContent.id, {
+        status: ContentStatus.FAILED
+      });
     });
     
     return response;
@@ -311,7 +339,7 @@ export class ChapterService {
   /**
    * 后台处理分片合并
    */
-  private async processMultipartUpload(uploadId: string, key: string, etags: string[], bucketName: string, contentType: string) {
+  private async processMultipartUpload(uploadId: string, key: string, etags: string[], bucketName: string, contentType: string, contentId: number) {
     try {
       console.log(`开始后台处理分片合并 - uploadId: ${uploadId}, key: ${key}, 分片数: ${etags.length}`);
       
@@ -355,8 +383,19 @@ export class ChapterService {
       this.uploadDetails[uploadId].status = 'completed';
       this.uploadDetails[uploadId].url = url;
       this.uploadDetails[uploadId].completedAt = new Date();
+
+      // 计算文件哈希值
+      const fileHash = require('crypto').createHash('md5').update(combinedBuffer).digest('hex');
       
-      console.log(`分片合并完成 - uploadId: ${uploadId}, url: ${url}`);
+      // 更新数据库记录
+      await this.contentRepository.update(contentId, {
+        contentUrl: url,
+        fileHash: fileHash,
+        status: ContentStatus.COMPLETED,
+        size: combinedBuffer.length
+      });
+      
+      console.log(`分片合并完成 - uploadId: ${uploadId}, url: ${url}, contentId: ${contentId}`);
     } catch (error) {
       console.error('后台处理分片上传时出错:', error);
       
@@ -375,7 +414,35 @@ export class ChapterService {
       this.uploadDetails[uploadId].status = 'failed';
       this.uploadDetails[uploadId].error = error.message;
       
+      // 更新内容状态为失败
+      await this.contentRepository.update(contentId, {
+        status: ContentStatus.FAILED
+      });
+      
       throw error;
+    }
+  }
+
+  /**
+   * 根据contentType获取内容类型
+   */
+  private getContentType(contentType: string): string {
+    if (contentType.startsWith('video/')) {
+      return 'video';
+    } else if (contentType.startsWith('audio/')) {
+      return 'audio';
+    } else if (contentType.startsWith('image/')) {
+      return 'image';
+    } else if (contentType.includes('pdf')) {
+      return 'pdf';
+    } else if (contentType.includes('word') || contentType.includes('doc')) {
+      return 'doc';
+    } else if (contentType.includes('excel') || contentType.includes('sheet')) {
+      return 'excel';
+    } else if (contentType.includes('powerpoint') || contentType.includes('presentation')) {
+      return 'ppt';
+    } else {
+      return 'other';
     }
   }
 
